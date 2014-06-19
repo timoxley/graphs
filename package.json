@@ -1,0 +1,39 @@
+{
+  "name": "graphs",
+  "version": "1.0.0",
+  "description": "Intuitive data structure for graphs",
+  "main": "index.js",
+  "scripts": {
+    "test": "tape test/*.js"
+  },
+  "author": "Tim Oxley",
+  "license": "MIT",
+  "dependencies": {
+    "afterfn": "^2.0.0",
+    "beforefn": "^2.0.0",
+    "es6-map": "^0.1.0",
+    "es6-set": "^0.1.0",
+    "guardfn": "^1.0.0",
+    "inherits": "^2.0.1",
+    "sliced": "0.0.5"
+  },
+  "devDependencies": {
+    "tape": "^2.13.3"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "keywords": [
+    "graph",
+    "data",
+    "structure"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/timoxley/graphs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/timoxley/graphs/issues"
+  },
+  "homepage": "https://github.com/timoxley/graphs"
+}
