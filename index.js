@@ -13,8 +13,7 @@ module.exports = Graph
 
 function Graph() {
   Set.apply(this, arguments)
-  this.nodes = this
-  this.links = new Map()
+  this.linkMap = new Map()
 
   aspectify(this)
   this.guard('add', function() {
@@ -50,108 +49,121 @@ Graph.prototype.link = function(from, to) {
 }
 
 Graph.prototype.unlink = function(from, to) {
-  if (!this.canUnlink(from, to)) return false
   var linked = this._linked(from)
   if (!linked.has(to)) return false
   linked.delete(to)
-  if (!linked.size) this.links.delete(from)
+  if (!linked.size) this.linkMap.delete(from)
   return true
 }
 
-Graph.prototype.unlinkAll = function(node) {
-  this.from(node).forEach(function(to) {
+Graph.prototype.unlinkAll = function unlinkAll(node) {
+  this.from(node).forEach(function unlinkEachLinkedFrom(to) {
     this.unlink(node, to)
   }, this)
-  this.to(node).forEach(function(from) {
+  this.to(node).forEach(function unlinkEachLinkedTo(from) {
     this.unlink(from, node)
   }, this)
 }
 
-Graph.prototype.canLink = function canLink(from, to) {
-  return true
-}
-
-Graph.prototype.canUnlink = function canUnlink(from, to) {
-  return true
-}
-Graph.prototype.from =
-Graph.prototype.linked = function(from) {
+Graph.prototype.from = function from(from) {
   return new Set(this._linked(from))
 }
 
-Graph.prototype._linked = function(from) {
-  var linkedFrom = this.links.get(from)
-  if (!linkedFrom) {
-    linkedFrom = new Set()
-    this.links.set(from, linkedFrom)
-  }
-  return linkedFrom
-}
-
-Graph.prototype.to =
-Graph.prototype.getLinkedTo = function(to) {
+Graph.prototype.to = function to(to) {
   var linked = new Set()
-  this.links.forEach(function(value, key) {
+  this.linkMap.forEach(function (value, key) {
     if (value.has(to)) linked.add(key)
   })
   return linked
 }
 
-Graph.prototype.traverse = function(root, fn, traversed) {
+Graph.prototype._linked = function _linked(from) {
+  var linkedFrom = this.linkMap.get(from)
+  if (!linkedFrom) {
+    linkedFrom = new Set()
+    this.linkMap.set(from, linkedFrom)
+  }
+  return linkedFrom
+}
+
+Graph.prototype.visit = function visit(root, fn, visited) {
   if (arguments.length == 1) { // only callback
     fn = root
-    return this.traverseAll(fn)
+    return this.visitAll(fn)
   } else if (arguments.length == 2) { // either root, callback
     if (typeof fn === 'function') {
-      return this.traverseFrom(root, fn)
-    } else { // or callback, traversed
-      traversed = fn
+      return this.visitFrom(root, fn)
+    } else { // or callback, visited
+      visited = fn
       fn = root
-      return this.traverseAll(fn, traversed)
+      return this.visitAll(fn, visited)
     }
   }
 
-  return this.traverseFrom(root, fn, traversed)
+  return this.visitFrom(root, fn, visited)
 }
 
-Graph.prototype.traverseFrom = function(root, fn, traversed, previous) {
-  traversed = traversed || new Set()
-  if (!this.nodes.has(root)) return
-  if (traversed.has(root)) return
-  traversed.add(root)
+Graph.prototype.visitFrom = function visitFrom(root, fn, visited, previous) {
+  visited = visited || new Set()
+  if (!this.has(root)) return
+  if (visited.has(root)) return
+  visited.add(root)
   fn.call(this, root, previous)
-  return this.linked(root).forEach(function(linked) {
-    this.traverseFrom(linked, fn, traversed, root)
+  return this.from(root).forEach(function(linked) {
+    this.visitFrom(linked, fn, visited, root)
   }, this)
 }
 
-Graph.prototype.traverseAll = function(fn, traversed) {
-  traversed = traversed || new Set()
-  this.nodes.forEach(function(node) {
-    this.traverseFrom(node, fn, traversed)
+Graph.prototype.visitAll = function visitAll(fn, visited) {
+  visited = visited || new Set()
+  this.forEach(function(node) {
+    this.visitFrom(node, fn, visited)
   }, this)
 }
 
-Graph.prototype.traverseLinked = function(fn, traversed) {
-  traversed = traversed || new Set()
-  this.links.forEach(function(value, key) {
-    this.traverseFrom(key, fn, traversed)
+Graph.prototype.traverse = function traverse(from, fn) {
+  if (arguments.length === 1) return this.traverseAll(from)
+  return this.traverseFrom(from, fn)
+}
+
+Graph.prototype.traverseFrom = function traverseFrom(from, fn, visited) {
+  visited = visited || new Map()
+  var linked = visited.get(from)
+  if (!linked) linked = new Set()
+  visited.set(from, linked)
+  this.from(from).forEach(function(to) {
+    if (linked.has(to)) return
+    linked.add(to)
+    fn.call(this, from, to)
+    this.traverseFrom(to, fn, visited)
   }, this)
+}
+
+Graph.prototype.traverseAll = function traverseAll(fn) {
+  var self = this
+  this.linkMap.forEach(function(links, from) {
+    links.forEach(function(to) {
+      fn.call(self, from, to)
+    })
+  })
 }
 
 function aspectify(target) {
-  target.before = function (name, fn) {
-    this[name] = before(this[name], fn)
+  var _before = before
+  var _after = after
+  var _guard = guard
+  target.before = function before(name, fn) {
+    this[name] = _before(this[name], fn)
     return this
   }
 
-  target.after = function (name, fn) {
-    this[name] = after(this[name], fn)
+  target.after = function after(name, fn) {
+    this[name] = _after(this[name], fn)
     return this
   }
 
-  target.guard = function (name, fn) {
-    this[name] = guard(this[name], fn)
+  target.guard = function guard(name, fn) {
+    this[name] = _guard(this[name], fn)
     return this
   }
   return target

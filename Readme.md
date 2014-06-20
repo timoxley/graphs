@@ -5,9 +5,15 @@ An intuitive data structure for graphs, implemented using ES6 data structures.
 ```js
 var Graph = require('graphs')
 var graph = new Graph()
+var a = {name: 'a'}
+var b = {name: 'b'}
 graph.add(a)
 graph.add(b)
 graph.link(a, b)
+graph.traverse(function(from, to) {
+  console.log(from.name, 'linked to', to.name)
+})
+// => a linked to b
 ```
 
 ## Examples
@@ -30,15 +36,15 @@ graph.add(b)
 graph.has(b) // => true
 ```
 
-### Connecting Nodes
-
-Note linking will also add any missing nodes to the graph.
+### Linking Nodes
 
 ```js
 graph.link(a, b)
 ```
 
-### Getting connections to a Node
+Linking will also add nodes to the graph.
+
+### Getting Links to a Node
 
 `.to` and `.from` return ES6 Sets of connected nodes.
 
@@ -55,23 +61,24 @@ graph.to(b).has(a) // => true
 graph.from(b).size // => 0
 ```
 
-### Unlinking nodes
+### Unlinking Nodes
 
 ```js
 graph.unlink(a, b)
 graph.from(a).size // => 0
 ```
 
-### Deleting nodes
+### Deleting Nodes
+
+* Also removes any links (but not linked nodes).
 
 ```js
-// Also removes all links.
 graph.delete(b)
 ```
 
-### Listing all nodes
+### Iterating over all Nodes
 
-Note: `.forEach` will even include unlinked nodes.
+* `.forEach` will even include entirely unlinked nodes.
 
 ```js
 graph.forEach(function(node) {
@@ -80,13 +87,37 @@ graph.forEach(function(node) {
 
 ```
 
-### Traversing links from a certain node
+### Traversing the Graph
 
-Will not follow cycles.
+`graph.traverse` will traverse all links from the specified node.
+
+* Arguments to the callback are `from, to`
+* Starts at a node and follows links.
+* May visit a node multiple times (depending on how many times it's linked to).
+* The callback will always fire with valid `from` and `to` parameters.
+* If startNode is not linked to anything, callback will not fire.
+* Will not follow cycles.
 
 ```js
-graph.traverse(startNode, function(node) {
-  console.log('node: %s', node.name)
+graph.traverse(startNode, function(from, to) {
+  console.log('from: %s', from)
+  console.log('to: %s', to)
+})
+```
+
+### Visiting Linked Nodes
+
+`graph.visit` will visit each node that can be reached from the specified node, once.
+
+* Arguments to the callback are `to, from`
+* Will follow links but will not visit any node more than once.
+* The `from` argument may not be set if `visit` didn't follow a link to
+the current node (e.g. on the first iteration).
+
+```js
+graph.visit(startNode, function(node, linkedFrom) {
+  console.log('node: %s', node)
+  console.log('linkedFrom: %s', linkedFrom)
 })
 ```
 
