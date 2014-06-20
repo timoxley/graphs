@@ -2,6 +2,7 @@
 
 var test = require('tape')
 var Graph = require('../')
+var Set = require('es6-set')
 
 test('is sane', function(t) {
   t.ok(new Graph() instanceof Graph)
@@ -331,7 +332,7 @@ test('traverseFrom falsey root', function(t) {
   t.end()
 })
 
-test('traverse convenience method', function(t) {
+test('traverse(fn) == traverseAll', function(t) {
   var graph = new Graph()
   var a = {name: 'a'}
   var b = {name: 'b'}
@@ -339,23 +340,63 @@ test('traverse convenience method', function(t) {
   graph.link(a, b)
   graph.add(c)
 
-  t.test('traverse(fn) == traverseAll', function(t) {
-    t.plan(graph.nodes.size)
-    graph.traverse(function(node) {
-      t.ok(node)
-    })
+  t.plan(graph.nodes.size)
+  graph.traverse(function(node) {
+    t.ok(node)
   })
-
-  t.test('traverse(root, fn) == traverseFrom', function(t) {
-    t.plan(1) // should only hit b
-    graph.traverse(b, function(node) {
-      t.strictEqual(node, b)
-    })
-  })
-  t.end()
 })
 
-test('can traverse functions as data', function(t) {
+test('traverse(root, fn) == traverseFrom', function(t) {
+  var graph = new Graph()
+  var a = {name: 'a'}
+  var b = {name: 'b'}
+  var c = {name: 'c'}
+  graph.link(a, b)
+  graph.add(c)
+
+  t.plan(1) // should only hit b
+  graph.traverse(b, function(node) {
+    t.strictEqual(node, b)
+  })
+})
+
+test('traverse(fn, traversed) == traverseAll', function(t) {
+  var graph = new Graph()
+  var a = {name: 'a'}
+  var b = {name: 'b'}
+  var c = {name: 'c'}
+  graph.link(a, b)
+  graph.add(c)
+
+  var traversed = new Set()
+  traversed.add(c)
+  t.plan(2) // should not hit c even though in graph
+  graph.traverse(function(node) {
+    t.ok(node !== c)
+  }, traversed)
+})
+
+test('traverse(root, fn, traversed) == traverseAll', function(t) {
+  var graph = new Graph()
+  var a = {name: 'a'}
+  var b = {name: 'b'}
+  var c = {name: 'c'}
+  var d = {name: 'd'}
+  graph.link(a, b)
+  graph.link(b, c)
+  graph.link(c, d)
+
+  var traversed = new Set()
+  traversed.add(c)
+  t.plan(4)
+  graph.traverse(a, function(node) {
+    // should not hit c or d even though linked
+    t.ok(node !== c)
+    t.ok(node !== d)
+  }, traversed)
+})
+
+test('can traverse with functions as data', function(t) {
   var graph = new Graph()
   function a() {}
   function b() {}

@@ -91,19 +91,27 @@ Graph.prototype._linked = function(from) {
 Graph.prototype.to =
 Graph.prototype.getLinkedTo = function(to) {
   var linked = new Set()
-  this.linkMap.forEach(function(value, key) {
+  this.links.forEach(function(value, key) {
     if (value.has(to)) linked.add(key)
   })
   return linked
 }
 
-Graph.prototype.traverse = function(root, fn) {
-  if (typeof root === 'function' && arguments.length === 1) {
+Graph.prototype.traverse = function(root, fn, traversed) {
+  if (arguments.length == 1) { // only callback
     fn = root
     return this.traverseAll(fn)
-  } else {
-    return this.traverseFrom(root, fn)
+  } else if (arguments.length == 2) { // either root, callback
+    if (typeof fn === 'function') {
+      return this.traverseFrom(root, fn)
+    } else { // or callback, traversed
+      traversed = fn
+      fn = root
+      return this.traverseAll(fn, traversed)
+    }
   }
+
+  return this.traverseFrom(root, fn, traversed)
 }
 
 Graph.prototype.traverseFrom = function(root, fn, traversed, previous) {
