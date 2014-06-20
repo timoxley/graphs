@@ -91,18 +91,18 @@ Graph.prototype._linked = function(from) {
 Graph.prototype.to =
 Graph.prototype.getLinkedTo = function(to) {
   var linked = new Set()
-  this.links.forEach(function(value, key) {
+  this.linkMap.forEach(function(value, key) {
     if (value.has(to)) linked.add(key)
   })
   return linked
 }
 
-Graph.prototype.traverse = function(root, fn, traversed) {
-  if (typeof root === 'function') {
+Graph.prototype.traverse = function(root, fn) {
+  if (typeof root === 'function' && arguments.length === 1) {
     fn = root
-    return this.traverseAll(fn, traversed)
+    return this.traverseAll(fn)
   } else {
-    return this.traverseFrom(root, fn, traversed)
+    return this.traverseFrom(root, fn)
   }
 }
 

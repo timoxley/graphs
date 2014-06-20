@@ -355,6 +355,21 @@ test('traverse convenience method', function(t) {
   t.end()
 })
 
+test('can traverse functions as data', function(t) {
+  var graph = new Graph()
+  function a() {}
+  function b() {}
+  function c() {}
+  graph.link(a, b)
+  graph.add(c)
+  t.plan(3)
+  var expected = [a, b]
+  graph.traverse(a, function(node, prev) {
+    t.strictEqual(node, expected.shift())
+    if (prev) t.strictEqual(prev, a)
+  })
+})
+
 test('removing nodes', function(t) {
   var graph = new Graph()
   var a = {name: 'a'}
