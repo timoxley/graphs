@@ -12,7 +12,7 @@
     "afterfn": "^2.0.0",
     "beforefn": "^2.2.0",
     "es6-map": "^0.1.0",
-    "es6-set": "^0.1.0",
+    "es6-set": "0.1.0",
     "guardfn": "^1.0.0",
     "inherits": "^2.0.1",
     "sliced": "0.0.5"
